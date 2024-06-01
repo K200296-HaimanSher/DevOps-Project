@@ -9,6 +9,9 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/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'
+
 steps:
 - task: NodeTool@0
   inputs:
@@ -18,10 +21,12 @@ steps:
 - script: |
     npm install
     npm run build
+    curl -X POST -H 'Content-type: application/json' -d '{"text":"npm install and build completed"}' $SLACK_WEBHOOK_URL
   displayName: 'npm install and build'
 
 - script: |
     npm test
+    curl -X POST -H 'Content-type: application/json' -d '{"text":"npm test completed"}' $SLACK_WEBHOOK_URL
   displayName: 'npm test'
 
 - task: ArchiveFiles@2
@@ -32,3 +37,10 @@ steps:
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish artifacts: drop'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+
+- script: |
+    curl -X POST -H 'Content-type: application/json' -d '{"text":"Build artifacts published"}' $SLACK_WEBHOOK_URL
+  displayName: 'Notify Slack'
